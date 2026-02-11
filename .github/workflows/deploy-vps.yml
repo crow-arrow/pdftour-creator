@@ -1,0 +1,101 @@
+name: Deploy to VPS (GHCR image)
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag to deploy (latest or sha-xxxxxxx)"
+        required: false
+        default: "latest"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      APP_DIR: ${{ secrets.APP_DIR || '/opt/pdftour-creator-2' }}
+      VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate required deployment secrets
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          GHCR_USER: ${{ secrets.GHCR_USER }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+        run: |
+          set -euo pipefail
+          for key in VPS_HOST VPS_USER SSH_PRIVATE_KEY GHCR_USER GHCR_TOKEN; do
+            if [ -z "${!key}" ]; then
+              echo "Missing required secret: $key"
+              exit 1
+            fi
+          done
+
+      - name: Ensure app dir exists on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          port: ${{ env.VPS_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -euo pipefail
+            mkdir -p "${{ env.APP_DIR }}"
+            mkdir -p "${{ env.APP_DIR }}/data"
+
+      - name: Upload docker-compose.yml to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          port: ${{ env.VPS_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "docker-compose.yml"
+          target: "${{ env.APP_DIR }}"
+
+      - name: Deploy selected image tag
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          IMAGE_TAG: ${{ github.event.inputs.image_tag }}
+          GHCR_USER: ${{ secrets.GHCR_USER }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          APP_DIR: ${{ secrets.APP_DIR }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          port: ${{ env.VPS_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: IMAGE_TAG,GHCR_USER,GHCR_TOKEN,APP_DIR
+          script: |
+            set -euo pipefail
+            cd "$APP_DIR"
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            IMAGE_TAG="${IMAGE_TAG:-latest}" docker compose pull
+            IMAGE_TAG="${IMAGE_TAG:-latest}" docker compose up -d
+
+            HEALTHCHECK_URL="http://localhost:3004/api/pdf"
+            HEALTHCHECK_TIMEOUT_SECONDS=120
+            HEALTHCHECK_INTERVAL_SECONDS=5
+            elapsed=0
+
+            while [ "$elapsed" -lt "$HEALTHCHECK_TIMEOUT_SECONDS" ]; do
+              status_code="$(curl -s -o /dev/null -w "%{http_code}" "$HEALTHCHECK_URL" || true)"
+              if [ "$status_code" = "405" ]; then
+                echo "Healthcheck successful: $HEALTHCHECK_URL returned 405"
+                exit 0
+              fi
+
+              echo "Service is not ready yet (HTTP $status_code). Waiting... (${elapsed}/${HEALTHCHECK_TIMEOUT_SECONDS}s)"
+              sleep "$HEALTHCHECK_INTERVAL_SECONDS"
+              elapsed=$((elapsed + HEALTHCHECK_INTERVAL_SECONDS))
+            done
+
+            echo "Healthcheck failed: expected HTTP 405 from $HEALTHCHECK_URL"
+            docker compose ps
+            exit 1

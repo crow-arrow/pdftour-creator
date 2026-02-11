@@ -1,0 +1,18 @@
+services:
+  trip-quote-builder:
+    image: ${IMAGE_NAME:-ghcr.io/crow-arrow/pdftour-creator-2}:${IMAGE_TAG:-latest}
+    container_name: trip-quote-builder
+    ports:
+      - "3004:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/pdf', (r) => {process.exit(r.statusCode === 405 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    volumes:
+      - ./data:/app/data

@@ -1,0 +1,82 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+
+# Next.js build output
+.next/
+out/
+build/
+
+# Production
+dist/
+
+# Misc build artifacts
+*.tsbuildinfo
+.next-env.d.ts
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Vercel
+.vercel
+
+# Turbo / monorepo caches
+.turbo/
+
+# Parcel / other bundlers
+.cache/
+.parcel-cache/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Docker local overrides/secrets
+docker-compose.override.yml
+*.pem
+*.key
+
+# Optional: local data/uploads (uncomment if needed)
+# data/
+# uploads/
+
+# TEMP
+DEPLOY.md
+deploy.sh
+setup-vps.sh
+# temp local ignore
+DEPLOY.md
+scripts/deploy.sh
+scripts/setup-vps.sh

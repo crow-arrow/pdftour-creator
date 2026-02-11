@@ -1,0 +1,141 @@
+{
+  "coverageMaxPeople": 10,
+  "hotel": {
+    "budget": {
+      "pricingModel": "per_person",
+      "multiplier": "per_day",
+      "tiers": [
+        {
+          "minPeople": 1,
+          "maxPeople": 1,
+          "price": 48
+        },
+        {
+          "minPeople": 2,
+          "maxPeople": null,
+          "price": 65
+        }
+      ]
+    },
+    "premium": {
+      "pricingModel": "per_person",
+      "multiplier": "per_day",
+      "tiers": [
+        {
+          "minPeople": 1,
+          "maxPeople": 1,
+          "price": 155
+        },
+        {
+          "minPeople": 2,
+          "maxPeople": null,
+          "price": 91
+        }
+      ]
+    },
+    "luxury": {
+      "pricingModel": "per_person",
+      "multiplier": "per_day",
+      "tiers": [
+        {
+          "minPeople": 1,
+          "maxPeople": 1,
+          "price": 280
+        },
+        {
+          "minPeople": 2,
+          "maxPeople": 5,
+          "price": 240
+        },
+        {
+          "minPeople": 6,
+          "maxPeople": null,
+          "price": 210
+        }
+      ]
+    }
+  },
+  "dinner": {
+    "pricingModel": "per_person",
+    "multiplier": "per_day",
+    "tiers": [
+      {
+        "minPeople": 1,
+        "maxPeople": null,
+        "price": 25
+      }
+    ]
+  },
+  "guide": {
+    "pricingModel": "per_group",
+    "multiplier": "per_day",
+    "tiers": [
+      {
+        "minPeople": 1,
+        "maxPeople": null,
+        "price": 70
+      }
+    ]
+  },
+  "flight": {
+    "pricingModel": "per_person",
+    "multiplier": "per_trip",
+    "tiers": [
+      {
+        "minPeople": 1,
+        "maxPeople": null,
+        "price": 500
+      }
+    ]
+  },
+  "extras": [
+    {
+      "id": "transfer",
+      "titleEn": "Transfers",
+      "titleDe": "Transfers",
+      "price": 20,
+      "pricingModel": "per_group",
+      "multiplier": "per_day"
+    },
+    {
+      "id": "sam-aydarkul-bukhara",
+      "titleEn": "Car Sam-Aydarkul-Bukhara",
+      "titleDe": "Auto Sam-Aydarkul-Bukhara",
+      "price": 300,
+      "pricingModel": "per_group",
+      "multiplier": "per_trip"
+    },
+    {
+      "id": "tashkent-chimgan",
+      "titleEn": "Car Tashkent-Chimgan-Tashkent",
+      "titleDe": "Auto Taschkent-Chimgan-Taschkent",
+      "price": 200,
+      "pricingModel": "per_group",
+      "multiplier": "per_trip"
+    },
+    {
+      "id": "tickets",
+      "titleEn": "Entrance tickets",
+      "titleDe": "Eintrittskarten",
+      "price": 200,
+      "pricingModel": "per_group",
+      "multiplier": "per_trip"
+    },
+    {
+      "id": "guide-extra",
+      "titleEn": "Guide",
+      "titleDe": "Guide",
+      "price": 70,
+      "pricingModel": "per_group",
+      "multiplier": "per_day"
+    },
+    {
+      "id": "transport",
+      "titleEn": "Transport",
+      "titleDe": "Transport",
+      "price": 90,
+      "pricingModel": "per_group",
+      "multiplier": "per_day"
+    }
+  ]
+}

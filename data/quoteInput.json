@@ -1,0 +1,22 @@
+{
+  "clientName": "Atlas Ventures",
+  "quoteNumber": "Q-2026-018",
+  "date": "2026-01-18",
+  "peopleCount": 2,
+  "days": 7,
+  "hotelTier": "premium",
+  "dinnerIncluded": true,
+  "guideIncluded": true,
+  "guideDays": 7,
+  "internationalFlight": false,
+  "localAgencyCommissionPct": 20,
+  "jinnCommissionPct": 15,
+  "selectedExtras": [
+    { "id": "transfer", "days": 7, "quantity": 1 },
+    { "id": "sam-aydarkul-bukhara", "days": 1, "quantity": 1 },
+    { "id": "tashkent-chimgan", "days": 1, "quantity": 1 },
+    { "id": "tickets", "days": 1, "quantity": 1 },
+    { "id": "guide-extra", "days": 7, "quantity": 1 },
+    { "id": "transport", "days": 7, "quantity": 1 }
+  ]
+}
