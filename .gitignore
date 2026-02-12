@@ -80,3 +80,4 @@ setup-vps.sh
 DEPLOY.md
 scripts/deploy.sh
 scripts/setup-vps.sh
+infra/

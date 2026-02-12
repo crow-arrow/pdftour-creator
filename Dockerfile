@@ -21,7 +21,7 @@ COPY . .
 RUN mkdir -p /app/public
 
 # Устанавливаем переменные окружения для сборки
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Собираем приложение
 RUN npm run build
@@ -30,8 +30,8 @@ RUN npm run build
 FROM node:24-alpine AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Устанавливаем системные зависимости для Playwright
 RUN apk add --no-cache \
@@ -65,8 +65,8 @@ USER nextjs
 
 EXPOSE 3000
 
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
 # Устанавливаем переменные для Playwright
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
