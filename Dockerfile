@@ -3,6 +3,7 @@
 # Stage 1: Dependencies
 FROM node:24-alpine AS deps
 RUN apk add --no-cache libc6-compat
+RUN npm i -g npm@11.8.0
 WORKDIR /app
 
 # Копируем файлы зависимостей
@@ -11,6 +12,7 @@ RUN npm ci
 
 # Stage 2: Builder
 FROM node:24-alpine AS builder
+RUN npm i -g npm@11.8.0
 WORKDIR /app
 
 # Копируем зависимости из предыдущего stage

@@ -38,6 +38,9 @@ jobs:
         with:
           node-version: 24
 
+      - name: Pin npm version
+        run: npm i -g npm@11.8.0
+
       - name: Print Node and npm versions
         run: node -v && npm -v
 
