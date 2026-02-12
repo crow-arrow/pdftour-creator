@@ -33,6 +33,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Debug lockfile in runner
+        run: |
+          echo "SHA=$GITHUB_SHA"
+          node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package-lock.json','utf8')); console.log('lockfileVersion=',p.lockfileVersion); console.log('has picomatch=', !!p.packages['node_modules/picomatch']); console.log('has tinyglobby picomatch=', !!p.packages['node_modules/tinyglobby/node_modules/picomatch']);"
+
+      - name: Validate npm ci outside docker
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
