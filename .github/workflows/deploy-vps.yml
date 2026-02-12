@@ -14,7 +14,7 @@ jobs:
     permissions:
       contents: read
     env:
-      APP_DIR: ${{ secrets.APP_DIR || '/opt/pdftour-creator-2' }}
+      APP_DIR: ${{ secrets.APP_DIR || '/opt/pdftour-creator' }}
       VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
 
     steps:

@@ -13,7 +13,11 @@ import {
 import { ThemeSwitch } from "./ThemeSwitch";
 import { useLocale } from "@/components/locale-provider";
 
-export default function AppHeader() {
+type AppHeaderProps = {
+  initialTheme: "light" | "dark";
+};
+
+export default function AppHeader({ initialTheme }: AppHeaderProps) {
   const { locale, setLocale } = useLocale();
   const t = createT(locale);
 
@@ -27,7 +31,7 @@ export default function AppHeader() {
         <Link className="font-medium text-foreground data-[state=active]:text-accent" href="/pricing">{t("nav.pricing")}</Link>
       </nav>
       <div className="flex items-center sm:self-center self-end gap-4 order-first sm:order-last">
-        <ThemeSwitch />
+        <ThemeSwitch initialTheme={initialTheme} />
         <div className="flex items-center gap-2 mr-4 text-sm">
           <Select value={locale} onValueChange={(value: string) => setLocale(value as Locale)}>
             <SelectTrigger className="h-8 w-[72px]">

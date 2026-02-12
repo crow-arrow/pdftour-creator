@@ -1,6 +1,6 @@
 services:
   trip-quote-builder:
-    image: ${IMAGE_NAME:-ghcr.io/crow-arrow/pdftour-creator-2}:${IMAGE_TAG:-latest}
+    image: ${IMAGE_NAME:-ghcr.io/crow-arrow/pdftour-creator}:${IMAGE_TAG:-latest}
     container_name: trip-quote-builder
     ports:
       - "3004:3000"

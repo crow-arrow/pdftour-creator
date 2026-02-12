@@ -18,7 +18,9 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies();
   const localeValue = cookieStore.get("locale")?.value;
+  const themeValue = cookieStore.get("theme")?.value;
   const initialLocale = localeValue === "de" ? "de" : "en";
+  const initialTheme = themeValue === "dark" ? "dark" : "light";
 
   return (
     <html lang={initialLocale} suppressHydrationWarning>
@@ -31,12 +33,12 @@ export default async function RootLayout({
       <body>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme={initialTheme || "system"}
           enableSystem
           disableTransitionOnChange
         >
           <LocaleProvider initialLocale={initialLocale}>
-            <AppHeader />
+            <AppHeader initialTheme={initialTheme} />
             <main className="container-shell">{children}</main>
             <Toaster richColors position="bottom-center" />
           </LocaleProvider>
