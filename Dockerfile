@@ -46,7 +46,6 @@ RUN apk add --no-cache \
 # Устанавливаем Playwright и браузеры
 RUN npm install -g playwright@^1.49.1
 RUN playwright install chromium
-RUN playwright install-deps chromium
 
 # Создаем непривилегированного пользователя
 RUN addgroup --system --gid 1001 nodejs
@@ -70,6 +69,6 @@ ENV HOSTNAME "0.0.0.0"
 
 # Устанавливаем переменные для Playwright
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
 
 CMD ["node", "server.js"]
