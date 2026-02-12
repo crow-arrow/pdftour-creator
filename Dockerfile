@@ -1,7 +1,7 @@
 # Multi-stage build для оптимизации размера образа
 
 # Stage 1: Dependencies
-FROM node:20-alpine AS deps
+FROM node:24-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
@@ -10,7 +10,7 @@ COPY package.json package-lock.json* ./
 RUN npm ci
 
 # Stage 2: Builder
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 
 # Копируем зависимости из предыдущего stage
@@ -24,7 +24,7 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN npm run build
 
 # Stage 3: Runner с Playwright
-FROM node:20-alpine AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
