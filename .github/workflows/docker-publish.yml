@@ -38,6 +38,9 @@ jobs:
         with:
           node-version: 24
 
+      - name: Print Node and npm versions
+        run: node -v && npm -v
+
       - name: Debug lockfile in runner
         run: |
           echo "SHA=$GITHUB_SHA"
@@ -45,7 +48,7 @@ jobs:
 
       - name: Validate npm ci outside docker
         run: npm ci
-        
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
