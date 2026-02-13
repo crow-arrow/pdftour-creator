@@ -59,7 +59,7 @@ export function renderQuoteHtml({ quote, locale, calculated }: RenderParams) {
           <td style="color: var(--muted)">${escapeHtml(
             stripTierPrefix(item.pricingNotes)
           )}</td>
-          <td>${qty}</td>
+          <td style="text-align: right">${qty}</td>
         </tr>
       `;
     })
@@ -231,7 +231,7 @@ export function renderQuoteHtml({ quote, locale, calculated }: RenderParams) {
             <div class="quote-meta">
               <span class="accent-pill">${escapeHtml(title)}</span>
               <div>${escapeHtml(t("labels.quoteNumber"))}: ${escapeHtml(quote.quoteNumber)}</div>
-              <div>${escapeHtml(t("labels.date"))}: ${escapeHtml(formatDate(quote.date, locale))}</div>
+              <div>${escapeHtml(t("labels.issueDate"))}: ${escapeHtml(formatDate(quote.date, locale))}</div>
             </div>
           </div>
         </div>
@@ -255,7 +255,7 @@ export function renderQuoteHtml({ quote, locale, calculated }: RenderParams) {
               <tr>
                 <th>${escapeHtml(t("labels.item"))}</th>
                 <th>${escapeHtml(t("labels.details"))}</th>
-                <th>${escapeHtml(t("labels.qty"))}</th>
+                <th style="text-align: right">${escapeHtml(t("labels.qty"))}</th>
               </tr>
             </thead>
             <tbody>

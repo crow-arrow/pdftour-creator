@@ -23,9 +23,11 @@ export default function AppHeader({ initialTheme }: AppHeaderProps) {
   const { locale, setLocale } = useLocale();
   const t = createT(locale);
   const pathname = usePathname();
-  const isQuotePage = pathname === "/quote";
-  const isPricingPage = pathname === "/pricing";
-  const navItems = [{ href: "/quote", label: t("nav.quote")}, { href: "/pricing", label: t("nav.pricing")}]
+  const navItems = [
+    { href: "/quote", label: t("nav.quote") },
+    { href: "/saved", label: t("nav.savedPdfs") },
+    { href: "/pricing", label: t("nav.pricing") }
+  ];
 
   return (
     <header className="sticky top-10 z-50 header-shell flex flex-col sm:flex-row gap-4 items-center justify-between bg-background/55 backdrop-blur-xl rounded-full border border-border shadow">

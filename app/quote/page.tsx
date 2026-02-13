@@ -19,14 +19,16 @@ import {
 } from "@/components/ui/form";
 import { calculateQuote } from "@/lib/calc";
 import { createT } from "@/lib/i18n";
+import { getNextQuoteNumber } from "@/lib/quoteNumber";
 import { formatCurrency } from "@/lib/format";
 import type { HotelTier, Locale } from "@/lib/types";
 import { useLocale } from "@/components/locale-provider";
 import { toast } from "sonner";
 import { usePricingStore } from "@/store/pricingStore";
-import { useQuoteStore } from "@/store/quoteStore";
+import { useQuoteStore, hydrateQuoteNumberToNext } from "@/store/quoteStore";
 import { Trash2 } from "lucide-react";
 import { NumberStepper } from "@/components/NumberStepper";
+import { DatePickerInput } from "@/components/DatePickerInput";
 
 export default function QuotePage() {
   const {
@@ -51,6 +53,10 @@ export default function QuotePage() {
   }, [quote, pricing, locale]);
 
   useEffect(() => {
+    hydrateQuoteNumberToNext();
+  }, []);
+
+  useEffect(() => {
     if (quote.selectedExtras.length === 0) {
       return;
     }
@@ -65,7 +71,7 @@ export default function QuotePage() {
     });
   }, [pricing.extras, quote.days, quote.selectedExtras, updateSelectedExtra]);
 
-  const handleDownload = async (locale: Locale, preview = false) => {
+  const handlePreview = async (locale: Locale) => {
     const response = await fetch(`/api/pdf?lang=${locale}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -77,16 +83,27 @@ export default function QuotePage() {
     }
     const blob = await response.blob();
     const url = URL.createObjectURL(blob);
-    if (preview) {
-      window.open(url, "_blank", "noopener,noreferrer");
-    } else {
-      const fileName = `${locale === "de" ? "Angebot" : "Quote"}_${quote.quoteNumber}_${locale.toUpperCase()}.pdf`;
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      link.click();
-    }
+    window.open(url, "_blank", "noopener,noreferrer");
     setTimeout(() => URL.revokeObjectURL(url), 2000);
+  };
+
+  const handleSave = async () => {
+    const response = await fetch("/api/pdf/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ quote, pricing })
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      const message =
+        data?.error === "QUOTE_NUMBER_EXISTS"
+          ? t("toast.quoteNumberExists")
+          : t("toast.pdfSaveFailed");
+      toast.error(message);
+      return;
+    }
+    toast.success(t("toast.pdfSaved"));
+    setField("quoteNumber", getNextQuoteNumber(quote.quoteNumber));
   };
 
   return (
@@ -121,14 +138,7 @@ export default function QuotePage() {
               </FormControl>
             </FormItem>
             <FormItem>
-              <FormLabel>{t("labels.date")}</FormLabel>
-              <FormControl>
-                <Input
-                  type="date"
-                  value={quote.date}
-                  onChange={(event) => setField("date", event.target.value)}
-                />
-              </FormControl>
+              <DatePickerInput label={t("labels.issueDate")} value={quote.date} onChange={(date: string) => setField("date", date)} />
             </FormItem>
             <FormItem>
               <FormLabel>{t("labels.peopleCount")}</FormLabel>
@@ -345,13 +355,10 @@ export default function QuotePage() {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <Button className="flex-1" onClick={() => handleDownload("en")}>
-              {t("labels.downloadEn")}
+            <Button className="flex-1" onClick={handleSave}>
+              {t("labels.savePdf")}
             </Button>
-            <Button className="flex-1" onClick={() => handleDownload("de")}>
-              {t("labels.downloadDe")}
-            </Button>
-            <Button className="flex-1" variant="outline" onClick={() => handleDownload(locale, true)}>
+            <Button className="flex-1" variant="outline" onClick={() => handlePreview(locale)}>
               {t("labels.previewPdf")}
             </Button>
           </div>

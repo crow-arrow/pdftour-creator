@@ -19,12 +19,12 @@ const inputGroupVariants = cva(
       },
     },
     defaultVariants: {
-      size: "sm",
+      size: "lg",
     },
   }
 )
 
-function InputGroup({ className, size = "sm", ...props }: React.ComponentProps<"div"> & VariantProps<typeof inputGroupVariants>) {
+function InputGroup({ className, size, ...props }: React.ComponentProps<"div"> & VariantProps<typeof inputGroupVariants>) {
   return (
     <div
       data-slot="input-group"

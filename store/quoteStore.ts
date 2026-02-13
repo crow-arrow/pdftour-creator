@@ -2,7 +2,35 @@ import { create } from "zustand";
 import type { QuoteInput, SelectedExtra } from "@/lib/types";
 import defaultQuote from "@/data/quoteInput.json";
 
+import { getNextQuoteNumber } from "@/lib/quoteNumber";
+
 const defaultQuoteTyped = defaultQuote as QuoteInput;
+export const QUOTE_NUMBER_STORAGE_KEY = "pdf-tour-quote-number";
+
+/** Устанавливает quoteNumber в (последний сохранённый + 1) или из localStorage. Вызывать в useEffect на клиенте. */
+export async function hydrateQuoteNumberToNext(): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    const res = await fetch("/api/pdf/files");
+    const data = (await res.json()) as { files?: { quoteNumber: string }[] };
+    const files = data?.files ?? [];
+    if (files.length > 0) {
+      const lastNumber = files[0].quoteNumber;
+      const nextNumber = getNextQuoteNumber(lastNumber);
+      useQuoteStore.getState().setField("quoteNumber", nextNumber);
+      return;
+    }
+    const stored = localStorage.getItem(QUOTE_NUMBER_STORAGE_KEY);
+    if (stored && /^Q-\d{4}-\d+$/i.test(stored)) {
+      const current = useQuoteStore.getState().quote.quoteNumber;
+      if (current !== stored) {
+        useQuoteStore.getState().setField("quoteNumber", stored);
+      }
+    }
+  } catch {
+    // ignore
+  }
+}
 
 interface QuoteState {
   quote: QuoteInput;
@@ -17,8 +45,16 @@ interface QuoteState {
 
 export const useQuoteStore = create<QuoteState>((set) => ({
   quote: defaultQuoteTyped,
-  setField: (key, value) =>
-    set((state) => ({ quote: { ...state.quote, [key]: value } })),
+  setField: (key, value) => {
+    set((state) => ({ quote: { ...state.quote, [key]: value } }));
+    if (key === "quoteNumber" && typeof window !== "undefined") {
+      try {
+        localStorage.setItem(QUOTE_NUMBER_STORAGE_KEY, String(value));
+      } catch {
+        // ignore
+      }
+    }
+  },
   addSelectedExtra: (id, days) =>
     set((state) => ({
       quote: {
@@ -57,5 +93,17 @@ export const useQuoteStore = create<QuoteState>((set) => ({
       return { quote: { ...state.quote, selectedExtras: list } };
     }),
   setQuote: (quote) => set({ quote }),
-  reset: () => set({ quote: defaultQuoteTyped })
+  reset: () => {
+    set({ quote: defaultQuoteTyped });
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(
+          QUOTE_NUMBER_STORAGE_KEY,
+          defaultQuoteTyped.quoteNumber
+        );
+      } catch {
+        // ignore
+      }
+    }
+  }
 }));

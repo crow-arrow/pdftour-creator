@@ -99,3 +99,32 @@ body {
     appearance: textfield;
   }
 }
+
+/* Кастомный скроллбар для DataTable */
+.scrollbar-custom {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.35) transparent;
+}
+
+.scrollbar-custom::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.35);
+  border-radius: 4px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:active {
+  background: hsl(var(--muted-foreground) / 0.6);
+}

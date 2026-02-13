@@ -114,7 +114,7 @@ function PricingSection({
       <CardHeader>
         <CardTitle><h3 className="text-base font-semibold">{title}</h3></CardTitle>
         <CardAction>
-          <Button size="lg" variant="outline" onClick={() => addTier(target)}>
+          <Button size="lg" onClick={() => addTier(target)}>
             {t("labels.addTier")}
           </Button>
         </CardAction>
@@ -290,7 +290,6 @@ export default function PricingPage() {
               .replace("{max}", String(pricing.coverageMaxPeople))}
           </div>
           <Button
-            variant="default"
             size="lg"
             className="min-w-full sm:min-w-32 whitespace-nowrap"
             onClick={handleManualSave}
@@ -318,7 +317,7 @@ export default function PricingPage() {
           <CardHeader>
             <CardTitle><h2>{t("labels.extraServices")}</h2></CardTitle>
             <CardAction>
-              <Button variant="outline" onClick={addExtra}>
+              <Button onClick={addExtra}>
                 {t("labels.addService")}
               </Button>
             </CardAction>

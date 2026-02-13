@@ -71,6 +71,7 @@ docker-compose.override.yml
 # Optional: local data/uploads (uncomment if needed)
 # data/
 # uploads/
+data/pdf/
 
 # TEMP
 DEPLOY.md

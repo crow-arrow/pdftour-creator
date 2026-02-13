@@ -38,8 +38,10 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <LocaleProvider initialLocale={initialLocale}>
-            <AppHeader initialTheme={initialTheme} />
-            <main className="container-shell">{children}</main>
+            <div className="h-screen flex flex-col">
+              <AppHeader initialTheme={initialTheme} />
+              <main className="container-shell flex flex-col flex-1 min-h-0">{children}</main>
+            </div>
             <Toaster richColors position="bottom-center" />
           </LocaleProvider>
         </ThemeProvider>
