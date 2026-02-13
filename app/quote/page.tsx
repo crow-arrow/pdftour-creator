@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { usePricingStore } from "@/store/pricingStore";
 import { useQuoteStore } from "@/store/quoteStore";
 import { Trash2 } from "lucide-react";
+import { NumberStepper } from "@/components/NumberStepper";
 
 export default function QuotePage() {
   const {
@@ -132,22 +133,20 @@ export default function QuotePage() {
             <FormItem>
               <FormLabel>{t("labels.peopleCount")}</FormLabel>
               <FormControl>
-                <Input
-                  type="number"
-                  min={1}
+                <NumberStepper
                   value={quote.peopleCount}
-                  onChange={(event) => setField("peopleCount", Number(event.target.value))}
+                  size="lg"
+                  onChange={(value: number) => setField("peopleCount", value)}
                 />
               </FormControl>
             </FormItem>
             <FormItem>
               <FormLabel>{t("labels.days")}</FormLabel>
               <FormControl>
-                <Input
-                  type="number"
-                  min={1}
+                <NumberStepper
                   value={quote.days}
-                  onChange={(event) => setField("days", Number(event.target.value))}
+                  size="lg"
+                  onChange={(value: number) => setField("days", value)}
                 />
               </FormControl>
             </FormItem>
@@ -172,35 +171,27 @@ export default function QuotePage() {
             <FormItem>
               <FormLabel>{t("labels.localAgencyCommission")}</FormLabel>
               <FormControl>
-                <Input
-                  type="number"
-                  min={0}
-                  step="0.1"
+                <NumberStepper
                   value={quote.localAgencyCommissionPct}
-                  onChange={(event) =>
-                    setField("localAgencyCommissionPct", Number(event.target.value))
-                  }
+                  size="lg"
+                  onChange={(value: number) => setField("localAgencyCommissionPct", value)}
                 />
               </FormControl>
             </FormItem>
             <FormItem>
               <FormLabel>{t("labels.jinnCommission")}</FormLabel>
               <FormControl>
-                <Input
-                  type="number"
-                  min={0}
-                  step="0.1"
+                <NumberStepper
                   value={quote.jinnCommissionPct}
-                  onChange={(event) =>
-                    setField("jinnCommissionPct", Number(event.target.value))
-                  }
+                  size="lg"
+                  onChange={(value: number) => setField("jinnCommissionPct", value)}
                 />
               </FormControl>
             </FormItem>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
-            <FormItem className="flex items-center justify-between gap-2">
+            <FormItem className="flex border border-border rounded-md p-2 items-center justify-between gap-2">
               <FormLabel className="text-sm font-medium">
                 {t("labels.dinnerIncluded")}
               </FormLabel>
@@ -211,7 +202,7 @@ export default function QuotePage() {
                 />
               </FormControl>
             </FormItem>
-            <FormItem className="flex items-center justify-between gap-2">
+            <FormItem className="flex border border-border rounded-md p-2 items-center justify-between gap-2">
               <FormLabel className="text-sm font-medium">
                 {t("labels.guideIncluded")}
               </FormLabel>
@@ -222,7 +213,7 @@ export default function QuotePage() {
                 />
               </FormControl>
             </FormItem>
-            <FormItem className="flex items-center justify-between gap-2">
+            <FormItem className="flex border border-border rounded-md p-2 items-center justify-between gap-2">
               <FormLabel className="text-sm font-medium">
                 {t("labels.flightIncluded")}
               </FormLabel>
@@ -307,21 +298,15 @@ export default function QuotePage() {
                       {extra.multiplier === "per_day" && (
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <span>{t("labels.serviceDays")}</span>
-                          <Input
-                            className="h-8 w-20"
-                            type="number"
-                            min={1}
-                            max={quote.days}
-                            value={selected.days}
-                            onChange={(event) =>
-                              updateSelectedExtra(extra.id, {
-                                days: Math.min(
-                                  quote.days,
-                                  Math.max(1, Number(event.target.value))
-                                )
-                              })
-                            }
-                          />
+                          <div className="w-32">
+                            <NumberStepper
+                              value={selected.days}
+                              buttonVariant="ghost"
+                              onChange={(value: number) => updateSelectedExtra(extra.id, { days: value })}
+                              min={1}
+                              max={quote.days}
+                            />
+                          </div>
                         </div>
                       )}
                       {extra.multiplier === "per_piece" && (
@@ -360,13 +345,13 @@ export default function QuotePage() {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <Button onClick={() => handleDownload("en")}>
+            <Button className="flex-1" onClick={() => handleDownload("en")}>
               {t("labels.downloadEn")}
             </Button>
-            <Button onClick={() => handleDownload("de")}>
+            <Button className="flex-1" onClick={() => handleDownload("de")}>
               {t("labels.downloadDe")}
             </Button>
-            <Button variant="outline" onClick={() => handleDownload(locale, true)}>
+            <Button className="flex-1" variant="outline" onClick={() => handleDownload(locale, true)}>
               {t("labels.previewPdf")}
             </Button>
           </div>

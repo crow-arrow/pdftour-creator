@@ -111,7 +111,10 @@ export const dictionaries = {
     "dialog.delete": "Delete",
     "pricing.activeQuote": "Active quote: {people} people, {days} days. Tier coverage must include at least 1..{max}+ people.",
     "pricing.save": "Save",
-    "pricing.noExtrasConfigured": "There are no additional services configured."
+    "pricing.noExtrasConfigured": "There are no additional services configured.",
+    // Accessibility labels
+    "aria.decrease": "Decrease",
+    "aria.increase": "Increase",
   },
   de: {
     "app.title": "Trip Quote Builder",
@@ -223,7 +226,10 @@ export const dictionaries = {
     "dialog.delete": "Löschen",
     "pricing.activeQuote": "Aktives Angebot: {people} Personen, {days} Tage. Die Staffeln müssen mindestens 1..{max}+ Personen abdecken.",
     "pricing.save": "Speichern",
-    "pricing.noExtrasConfigured": "Es sind keine Zusatzleistungen konfiguriert."
+    "pricing.noExtrasConfigured": "Es sind keine Zusatzleistungen konfiguriert.",
+    // Accessibility labels
+    "aria.decrease": "Verringern",
+    "aria.increase": "Erhöhen",
   }
 } as const;
 
