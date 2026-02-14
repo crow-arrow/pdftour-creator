@@ -17,9 +17,16 @@ export async function generatePdfBuffer(
     calculated
   });
 
+  const executablePath =
+    process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined;
   const browser = await chromium.launch({
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"]
+    executablePath,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage"
+    ]
   });
   const page = await browser.newPage();
   await page.setContent(html, { waitUntil: "networkidle" });

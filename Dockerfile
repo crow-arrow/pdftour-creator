@@ -33,8 +33,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Устанавливаем системные зависимости для Playwright
+# Системный Chromium (Alpine) — без загрузки браузеров Playwright
 RUN apk add --no-cache \
+    chromium \
     nss \
     freetype \
     freetype-dev \
@@ -42,13 +43,6 @@ RUN apk add --no-cache \
     ca-certificates \
     ttf-freefont \
     && rm -rf /var/cache/apk/*
-
-# Путь до установки — иначе браузер попадёт в дефолтную папку
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-
-# Устанавливаем Playwright и браузеры
-RUN npm install -g playwright@^1.49.1 \
-    && playwright install chromium
 
 # Создаем непривилегированного пользователя
 RUN addgroup --system --gid 1001 nodejs
@@ -69,5 +63,8 @@ EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+
+# Использовать системный Chromium (Alpine)
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
 
 CMD ["node", "server.js"]
