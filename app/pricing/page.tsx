@@ -29,6 +29,7 @@ import {
   FormItem,
   FormLabel
 } from "@/components/ui/form";
+import { NumberInput } from "@/components/ui/number-input";
 import { createT } from "@/lib/i18n";
 import type { TranslationKey } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
@@ -37,6 +38,7 @@ import { useLocale } from "@/components/locale-provider";
 import { usePricingStore, type PricingTarget } from "@/store/pricingStore";
 import { useQuoteStore } from "@/store/quoteStore";
 import { cn } from "@/lib/utils";
+import { NumberStepper } from "@/components/NumberStepper";
 
 const sections: { key: PricingTarget; titleKey: string }[] = [
   { key: "hotel.budget", titleKey: "items.hotel_budget" },
@@ -163,45 +165,51 @@ function PricingSection({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full table-fixed text-sm">
+          <colgroup>
+            <col style={{ width: "32%" }} />
+            <col style={{ width: "32%" }} />
+            <col style={{ width: "32%" }} />
+            <col style={{ width: "4rem" }} />
+          </colgroup>
           <thead>
             <tr className="text-left text-muted-foreground">
               <th className="pb-2">{t("labels.minPeople")}</th>
               <th className="pb-2">{t("labels.maxPeople")}</th>
               <th className="pb-2">{t("labels.price")} (€)</th>
-              <th className="pb-2">{t("labels.actions")}</th>
             </tr>
           </thead>
           <tbody>
             {config.tiers.map((tier, index) => (
               <tr key={`${tier.minPeople}-${index}`}>
                 <td className="py-2 pr-3">
-                  <Input
-                    type="number"
-                    min={1}
-                    value={tier.minPeople}
-                    onChange={(event) => updateTier(target, index, { minPeople: Number(event.target.value) })}
-                  />
+                <NumberStepper
+                  value={tier.minPeople}
+                  onChange={(v) => updateTier(target, index, { minPeople: v ?? tier.minPeople })}
+                  min={1}
+                  max={999}
+                  size="lg"
+                  className="w-full"
+                />
                 </td>
-                <td className="py-2 pr-3">
-                  <Input
-                    type="number"
+                <td className="flex-1 py-2 pr-3">
+                  <NumberStepper
                     min={tier.minPeople}
-                    value={tier.maxPeople ?? ""}
-                    onChange={(event) =>
-                      updateTier(target, index, {
-                        maxPeople: event.target.value === "" ? null : Number(event.target.value)
-                      })
-                    }
-                    placeholder="+"
+                    value={tier.maxPeople}
+                    onChange={(v) => updateTier(target, index, { maxPeople: v })}
+                    allowNull
+                    nullPlaceholder="+"
+                    max={999}
+                    size="lg"
+                    className="w-full"
                   />
                 </td>
-                <td className="py-2 pr-3">
-                  <Input
-                    type="number"
+                <td className="flex-1 py-2 pr-3">
+                  <NumberInput
                     min={0}
                     value={tier.price}
-                    onChange={(event) => updateTier(target, index, { price: Number(event.target.value) })}
+                    onChange={(v) => updateTier(target, index, { price: v })}
+                    className="w-full"
                   />
                 </td>
                 <td className="py-2 w-10 text-end">
@@ -343,13 +351,10 @@ export default function PricingPage() {
                   }
                   placeholder={t("labels.serviceTitleDe")}
                 />
-                <Input
-                  type="number"
+                <NumberInput
                   min={0}
                   value={extra.price}
-                  onChange={(event) =>
-                    updateExtra(extra.id, { price: Number(event.target.value) })
-                  }
+                  onChange={(v) => updateExtra(extra.id, { price: v })}
                   placeholder={t("labels.servicePrice")}
                 />
                 <Select

@@ -28,6 +28,7 @@ import { usePricingStore } from "@/store/pricingStore";
 import { useQuoteStore, hydrateQuoteNumberToNext } from "@/store/quoteStore";
 import { Trash2 } from "lucide-react";
 import { NumberStepper } from "@/components/NumberStepper";
+import { NumberInput } from "@/components/ui/number-input";
 import { DatePickerInput } from "@/components/DatePickerInput";
 
 export default function QuotePage() {
@@ -146,7 +147,7 @@ export default function QuotePage() {
                 <NumberStepper
                   value={quote.peopleCount}
                   size="lg"
-                  onChange={(value: number) => setField("peopleCount", value)}
+                  onChange={(v) => setField("peopleCount", v ?? quote.peopleCount)}
                 />
               </FormControl>
             </FormItem>
@@ -156,7 +157,7 @@ export default function QuotePage() {
                 <NumberStepper
                   value={quote.days}
                   size="lg"
-                  onChange={(value: number) => setField("days", value)}
+                  onChange={(v) => setField("days", v ?? quote.days)}
                 />
               </FormControl>
             </FormItem>
@@ -184,7 +185,7 @@ export default function QuotePage() {
                 <NumberStepper
                   value={quote.localAgencyCommissionPct}
                   size="lg"
-                  onChange={(value: number) => setField("localAgencyCommissionPct", value)}
+                  onChange={(v) => setField("localAgencyCommissionPct", v ?? quote.localAgencyCommissionPct)}
                 />
               </FormControl>
             </FormItem>
@@ -194,7 +195,7 @@ export default function QuotePage() {
                 <NumberStepper
                   value={quote.jinnCommissionPct}
                   size="lg"
-                  onChange={(value: number) => setField("jinnCommissionPct", value)}
+                  onChange={(v) => setField("jinnCommissionPct", v ?? quote.jinnCommissionPct)}
                 />
               </FormControl>
             </FormItem>
@@ -312,7 +313,7 @@ export default function QuotePage() {
                             <NumberStepper
                               value={selected.days}
                               buttonVariant="ghost"
-                              onChange={(value: number) => updateSelectedExtra(extra.id, { days: value })}
+                              onChange={(v) => updateSelectedExtra(extra.id, { days: v ?? selected.days })}
                               min={1}
                               max={quote.days}
                             />
@@ -322,14 +323,11 @@ export default function QuotePage() {
                       {extra.multiplier === "per_piece" && (
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <span>{t("labels.serviceQty")}</span>
-                          <Input
-                            type="number"
+                          <NumberInput
                             min={1}
                             value={selected.quantity}
-                            onChange={(event) =>
-                              updateSelectedExtra(extra.id, {
-                                quantity: Math.max(1, Number(event.target.value))
-                              })
+                            onChange={(v) =>
+                              updateSelectedExtra(extra.id, { quantity: v })
                             }
                           />
                         </div>
