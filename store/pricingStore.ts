@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { PricingConfig, PricingExtra, HotelPricingConfig, SimplePricingConfig } from "@/lib/types";
+import type { PricingConfig, PricingExtra, PricingItemConfig, Tier } from "@/lib/types";
 import defaultPricing from "@/data/pricingConfig.json";
 
 const PRICING_API_URL = "/api/pricing";
@@ -10,6 +10,9 @@ export type PricingTarget =
   | "hotel.budget"
   | "hotel.premium"
   | "hotel.luxury"
+  | "dinner"
+  | "guide"
+  | "flight";
 
 interface PricingState {
   pricing: PricingConfig;
@@ -23,28 +26,28 @@ interface PricingState {
   savePricing: () => Promise<void>;
   saveSection: (target: PricingTarget) => Promise<void>;
 
-  updateConfig: (target: PricingTarget, patch: Partial<HotelPricingConfig> | Partial<SimplePricingConfig>) => void;
+  updateConfig: (target: PricingTarget, patch: Partial<PricingItemConfig>) => void;
+  updateTier: (target: PricingTarget, index: number, patch: Partial<Tier>) => void;
+  addTier: (target: PricingTarget) => void;
+  removeTier: (target: PricingTarget, index: number) => void;
   addExtra: () => void;
   updateExtra: (id: string, patch: Partial<PricingExtra>) => void;
   removeExtra: (id: string) => void;
   reset: () => void;
 }
 
-function getConfig(
-  pricing: PricingConfig,
-  target: PricingTarget
-): HotelPricingConfig | SimplePricingConfig {
+function getConfig(pricing: PricingConfig, target: PricingTarget): PricingItemConfig {
   if (target.startsWith("hotel.")) {
     const key = target.split(".")[1] as keyof PricingConfig["hotel"];
     return pricing.hotel[key];
   }
-  return pricing.extras.find((item) => item.id === target) as PricingExtra;
+  return pricing[target as "dinner" | "guide" | "flight"];
 }
 
 function setConfig(
   pricing: PricingConfig,
   target: PricingTarget,
-  config: HotelPricingConfig | SimplePricingConfig
+  config: PricingItemConfig
 ) {
   if (target.startsWith("hotel.")) {
     const key = target.split(".")[1] as keyof PricingConfig["hotel"];
@@ -162,6 +165,40 @@ export const usePricingStore = create<PricingState>((set, get): PricingState => 
       set((state) => {
         const current = getConfig(state.pricing, target);
         return { pricing: setConfig(state.pricing, target, { ...current, ...patch }) };
+      });
+      scheduleAutoSave();
+    },
+
+    updateTier: (target, index, patch) => {
+      set((state) => {
+        const current = getConfig(state.pricing, target);
+        const tiers = current.tiers.map((tier, idx) =>
+          idx === index ? { ...tier, ...patch } : tier
+        );
+        return { pricing: setConfig(state.pricing, target, { ...current, tiers }) };
+      });
+      scheduleAutoSave();
+    },
+
+    addTier: (target) => {
+      set((state) => {
+        const current = getConfig(state.pricing, target);
+        const last = current.tiers[current.tiers.length - 1];
+        const nextMin = last ? (last.maxPeople ?? last.minPeople) + 1 : 1;
+        const tiers = [
+          ...current.tiers,
+          { minPeople: nextMin, maxPeople: null, price: last?.price ?? 0 }
+        ];
+        return { pricing: setConfig(state.pricing, target, { ...current, tiers }) };
+      });
+      scheduleAutoSave();
+    },
+
+    removeTier: (target, index) => {
+      set((state) => {
+        const current = getConfig(state.pricing, target);
+        const tiers = current.tiers.filter((_, idx) => idx !== index);
+        return { pricing: setConfig(state.pricing, target, { ...current, tiers }) };
       });
       scheduleAutoSave();
     },

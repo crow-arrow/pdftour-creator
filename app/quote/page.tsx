@@ -42,7 +42,6 @@ export default function QuotePage() {
   } = useQuoteStore();
   const { pricing } = usePricingStore();
   const { locale } = useLocale();
-  const [selectedServiceId, setSelectedServiceId] = useState("");
   const [selectedExtraId, setSelectedExtraId] = useState("");
   const t = createT(locale);
 
@@ -202,7 +201,45 @@ export default function QuotePage() {
             </FormItem>
           </div>
 
-          <div id="extra-services" className="space-y-3 rounded-lg border border-border bg-muted p-4">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <FormItem className="flex border border-border rounded-md p-2 items-center justify-between gap-2">
+              <FormLabel className="text-sm font-medium">
+                {t("labels.dinnerIncluded")}
+              </FormLabel>
+              <FormControl>
+                <Switch
+                  checked={quote.dinnerIncluded}
+                  onCheckedChange={(value: boolean) => setField("dinnerIncluded", value)}
+                />
+              </FormControl>
+            </FormItem>
+            <FormItem className="flex border border-border rounded-md p-2 items-center justify-between gap-2">
+              <FormLabel className="text-sm font-medium">
+                {t("labels.guideIncluded")}
+              </FormLabel>
+              <FormControl>
+                <Switch
+                  checked={quote.guideIncluded}
+                  onCheckedChange={(value: boolean) => setField("guideIncluded", value)}
+                />
+              </FormControl>
+            </FormItem>
+            <FormItem className="flex border border-border rounded-md p-2 items-center justify-between gap-2">
+              <FormLabel className="text-sm font-medium">
+                {t("labels.flightIncluded")}
+              </FormLabel>
+              <FormControl>
+                <Switch
+                  checked={quote.internationalFlight}
+                  onCheckedChange={(value: boolean) =>
+                    setField("internationalFlight", value)
+                  }
+                />
+              </FormControl>
+            </FormItem>
+          </div>
+
+          <div className="space-y-3 rounded-lg border border-border bg-muted p-4">
             <div className="flex flex-wrap items-end gap-3">
               <div className="min-w-[240px]">
                 <label className="text-sm font-medium">
@@ -228,11 +265,7 @@ export default function QuotePage() {
                       )
                       .map((extra) => (
                         <SelectItem key={extra.id} value={extra.id}>
-                          {locale === "de" ? extra.titleDe : extra.titleEn} · €{
-                            extra.id === "single_supplement" || extra.priceSource === "hotel"
-                              ? pricing.hotel[quote.hotelTier].singleSupplementPrice
-                              : extra.price
-                          }
+                          {locale === "de" ? extra.titleDe : extra.titleEn} · €{extra.price}
                         </SelectItem>
                       ))}
                   </SelectContent>
@@ -270,11 +303,7 @@ export default function QuotePage() {
                   >
                     <div>
                       <div className="font-medium">{title}</div>
-                      <div className="text-xs text-muted-foreground">
-                        €{extra.id === "single_supplement" || extra.priceSource === "hotel"
-                          ? pricing.hotel[quote.hotelTier].singleSupplementPrice
-                          : extra.price}
-                      </div>
+                      <div className="text-xs text-muted-foreground">€{extra.price}</div>
                     </div>
                     <div className="flex items-center gap-3">
                       {extra.multiplier === "per_day" && (
@@ -294,30 +323,13 @@ export default function QuotePage() {
                       {extra.multiplier === "per_piece" && (
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <span>{t("labels.serviceQty")}</span>
-                          <div className="w-32">
-                          <NumberStepper
-                            value={
-                              extra.id === "single_supplement"
-                                ? (() => {
-                                    const q = selected.quantity ?? 0;
-                                    const min = quote.peopleCount % 2;
-                                    const parity = quote.peopleCount % 2;
-                                    if ((q - parity) % 2 !== 0) {
-                                      return Math.max(min, Math.min(quote.peopleCount, q % 2 === parity ? q : q - 1));
-                                    }
-                                    return Math.max(min, Math.min(quote.peopleCount, q));
-                                  })()
-                                : selected.quantity
-                            }
-                            buttonVariant="ghost"
+                          <NumberInput
+                            min={1}
+                            value={selected.quantity}
                             onChange={(v) =>
-                              updateSelectedExtra(extra.id, { quantity: v ?? selected.quantity })
+                              updateSelectedExtra(extra.id, { quantity: v })
                             }
-                            min={extra.id === "single_supplement" ? quote.peopleCount % 2 : 1}
-                            max={quote.peopleCount}
-                            step={extra.id === "single_supplement" ? 2 : 1}
                           />
-                          </div>
                         </div>
                       )}
                       <Button

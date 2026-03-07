@@ -1,26 +1,32 @@
 import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { PricingConfig, HotelPricingConfig, SimplePricingConfig, PricingExtra } from "@/lib/types";
+import type { PricingConfig, PricingItemConfig, PricingExtra, Tier } from "@/lib/types";
 import defaultPricing from "@/data/pricingConfig.json";
 
 export const runtime = "nodejs";
 
 const DATA_FILE = path.join(process.cwd(), "data", "pricingConfig.json");
 
-function isHotelPricingConfig(value: unknown): value is HotelPricingConfig {
+function isTier(value: unknown): value is Tier {
   if (!value || typeof value !== "object") return false;
-  const cfg = value as Partial<HotelPricingConfig>;
+  const tier = value as Partial<Tier>;
+  return (
+    typeof tier.minPeople === "number" &&
+    (typeof tier.maxPeople === "number" || tier.maxPeople === null) &&
+    typeof tier.price === "number"
+  );
+}
+
+function isPricingItemConfig(value: unknown): value is PricingItemConfig {
+  if (!value || typeof value !== "object") return false;
+  const cfg = value as Partial<PricingItemConfig>;
   const validPricingModel = cfg.pricingModel === "per_person" || cfg.pricingModel === "per_group";
   const validMultiplier =
     cfg.multiplier === "per_day" || cfg.multiplier === "per_trip" || cfg.multiplier === "per_piece";
-  return (
-    !!validPricingModel &&
-    !!validMultiplier &&
-    typeof cfg.basePrice === "number" &&
-    typeof cfg.singleSupplementPrice === "number" &&
-    cfg.singleSupplementPrice >= 0
-  );
+  const validTiers =
+    Array.isArray(cfg.tiers) && cfg.tiers.length > 0 && cfg.tiers.every((t) => isTier(t));
+  return !!validPricingModel && !!validMultiplier && validTiers;
 }
 
 function isPricingExtra(value: unknown): value is PricingExtra {
@@ -31,7 +37,6 @@ function isPricingExtra(value: unknown): value is PricingExtra {
     extra.multiplier === "per_day" ||
     extra.multiplier === "per_trip" ||
     extra.multiplier === "per_piece";
-  const validPriceSource = extra.priceSource === "hotel" || extra.priceSource === undefined;
 
   return (
     typeof extra.id === "string" &&
@@ -39,8 +44,7 @@ function isPricingExtra(value: unknown): value is PricingExtra {
     typeof extra.titleDe === "string" &&
     typeof extra.price === "number" &&
     !!validPricingModel &&
-    !!validMultiplier &&
-    (validPriceSource ? validPriceSource : true)
+    !!validMultiplier
   );
 }
 
@@ -53,7 +57,11 @@ function isPricingConfig(value: unknown): value is PricingConfig {
 
   const hotel = cfg.hotel as PricingConfig["hotel"];
   const hotelKeys: (keyof PricingConfig["hotel"])[] = ["budget", "premium", "luxury"];
-  if (!hotelKeys.every((key) => isHotelPricingConfig(hotel[key]))) return false;
+  if (!hotelKeys.every((key) => isPricingItemConfig(hotel[key]))) return false;
+
+  if (!isPricingItemConfig(cfg.dinner)) return false;
+  if (!isPricingItemConfig(cfg.guide)) return false;
+  if (!isPricingItemConfig(cfg.flight)) return false;
 
   if (!Array.isArray(cfg.extras) || !cfg.extras.every((e) => isPricingExtra(e))) return false;
 

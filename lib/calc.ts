@@ -4,8 +4,7 @@ import type {
   LineItem,
   Locale,
   PricingConfig,
-  HotelPricingConfig,
-  SimplePricingConfig,
+  PricingItemConfig,
   QuoteInput
 } from "@/lib/types";
 
@@ -13,9 +12,16 @@ function roundCurrency(value: number) {
   return Math.round(value * 100) / 100;
 }
 
+function findTier(config: PricingItemConfig, peopleCount: number) {
+  return config.tiers.find((tier) => {
+    const max = tier.maxPeople ?? Number.POSITIVE_INFINITY;
+    return peopleCount >= tier.minPeople && peopleCount <= max;
+  });
+}
+
 function buildPricingNotes(
-  config: SimplePricingConfig | HotelPricingConfig,
-  extraLabel: string,
+  config: PricingItemConfig,
+  tierLabel: string,
   locale: Locale,
   multOverride?: string,
   skipModel?: boolean
@@ -33,11 +39,11 @@ function buildPricingNotes(
         : locale === "de"
           ? "pro Stück"
           : "per piece");
-
+  
   if (skipModel) {
-    return extraLabel ? `${extraLabel}, ${mult}` : mult;
+    return mult;
   }
-
+  
   const model =
     config.pricingModel === "per_person"
       ? locale === "de"
@@ -46,23 +52,35 @@ function buildPricingNotes(
       : locale === "de"
         ? "pro Gruppe"
         : "per group";
-  return extraLabel ? `${extraLabel}, ${model}, ${mult}` : `${model}, ${mult}`;
+  return `${tierLabel}, ${model}, ${mult}`;
 }
 
-function calculateSimpleItem(
+function calculateItem(
   key: string,
   titleKey: string,
   quote: QuoteInput,
-  config: SimplePricingConfig,
+  config: PricingItemConfig,
   locale: Locale,
-  options?: { daysOverride?: number; multLabelOverride?: string }
+  options?: { daysOverride?: number; multLabelOverride?: string; skipModel?: boolean }
 ): LineItem {
+  const tier = findTier(config, quote.peopleCount);
+  if (!tier) {
+    throw new Error(`No pricing tier for ${key} and ${quote.peopleCount} people`);
+  }
+
   const peopleMultiplier = config.pricingModel === "per_person" ? quote.peopleCount : 1;
   const effectiveDays = options?.daysOverride ?? quote.days;
   const timeMultiplier = config.multiplier === "per_day" ? effectiveDays : 1;
   const qty = peopleMultiplier * timeMultiplier;
-  const unitPrice = config.price;
+  const unitPrice = tier.price;
   const subtotal = roundCurrency(qty * unitPrice);
+  const tierLabel = tier.maxPeople
+    ? locale === "de"
+      ? `Staffel ${tier.minPeople}-${tier.maxPeople} Personen`
+      : `tier ${tier.minPeople}-${tier.maxPeople} people`
+    : locale === "de"
+      ? `Staffel ${tier.minPeople}+ Personen`
+      : `tier ${tier.minPeople}+ people`;
 
   return {
     key,
@@ -70,7 +88,7 @@ function calculateSimpleItem(
     qty,
     unitPrice: roundCurrency(unitPrice),
     subtotal,
-    pricingNotes: buildPricingNotes(config, "", locale, options?.multLabelOverride)
+    pricingNotes: buildPricingNotes(config, tierLabel, locale, options?.multLabelOverride, options?.skipModel)
   };
 }
 
@@ -86,47 +104,48 @@ export function calculateQuote(
   const items: LineItem[] = [];
   const hotelConfig = pricingConfig.hotel[quote.hotelTier];
   const nights = Math.max(0, quote.days - 1);
-
-  // Hotel base: all people × basePrice × nights
-  const hotelBaseQty = quote.peopleCount * nights;
-  const hotelBaseSubtotal = roundCurrency(hotelBaseQty * hotelConfig.basePrice);
-  items.push({
-    key: `hotel_${quote.hotelTier}`,
-    titleKey: `items.hotel_${quote.hotelTier}`,
-    qty: hotelBaseQty,
-    unitPrice: roundCurrency(hotelConfig.basePrice),
-    subtotal: hotelBaseSubtotal,
-    pricingNotes: buildPricingNotes(
+  items.push(
+    calculateItem(
+      `hotel_${quote.hotelTier}`,
+      `items.hotel_${quote.hotelTier}`,
+      quote,
       hotelConfig,
-      "",
       locale,
-      locale === "de" ? "pro Nacht" : "per night",
-      true
+      {
+        daysOverride: nights,
+        multLabelOverride: locale === "de" ? "pro Nacht" : "per night",
+        skipModel: true
+      }
     )
-  });
+  );
+
+  if (quote.dinnerIncluded) {
+    items.push(
+      calculateItem("dinner", "items.dinner", quote, pricingConfig.dinner, locale)
+    );
+  }
+  if (quote.guideIncluded) {
+    const guideDays =
+      pricingConfig.guide.multiplier === "per_day"
+        ? Math.min(quote.days, Math.max(1, quote.guideDays || quote.days))
+        : undefined;
+    items.push(
+      calculateItem("guide", "items.guide", quote, pricingConfig.guide, locale, {
+        daysOverride: guideDays
+      })
+    );
+  }
+  if (quote.internationalFlight) {
+    items.push(
+      calculateItem("flight", "items.flight", quote, pricingConfig.flight, locale)
+    );
+  }
 
   quote.selectedExtras.forEach((selected) => {
     const extra = pricingConfig.extras.find((item) => item.id === selected.id);
     if (!extra) {
       return;
     }
-
-    if (selected.id === "single_supplement") {
-      const price = hotelConfig.singleSupplementPrice;
-      const count = Math.max(0, Math.min(selected.quantity ?? 0, quote.peopleCount));
-      const qty = count * nights;
-      const title = locale === "de" ? extra.titleDe : extra.titleEn;
-      items.push({
-        key: `extra_${extra.id}`,
-        title,
-        qty,
-        unitPrice: roundCurrency(price),
-        subtotal: roundCurrency(qty * price),
-        pricingNotes: locale === "de" ? "pro Nacht" : "per night"
-      })
-      return;
-    }
-
     const title = locale === "de" ? extra.titleDe : extra.titleEn;
     const model =
       extra.pricingModel === "per_person"
