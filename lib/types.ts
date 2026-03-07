@@ -3,23 +3,23 @@ export type HotelTier = "budget" | "premium" | "luxury";
 export type PricingModel = "per_person" | "per_group";
 export type Multiplier = "per_day" | "per_trip" | "per_piece";
 
-/** Hotel: base price (shared room) + single supplement (extra when alone in room). */
-export interface HotelPricingConfig {
-  pricingModel: PricingModel;
-  multiplier: Multiplier;
-  basePrice: number;
-  singleSupplementPrice: number;
-}
-
-/** Dinner, guide, flight: single price. */
-export interface SimplePricingConfig {
-  pricingModel: PricingModel;
-  multiplier: Multiplier;
+export interface Tier {
+  minPeople: number;
+  maxPeople: number | null;
   price: number;
 }
 
+export interface PricingItemConfig {
+  pricingModel: PricingModel;
+  multiplier: Multiplier;
+  tiers: Tier[];
+}
+
 export interface PricingConfig {
-  hotel: Record<HotelTier, HotelPricingConfig>;
+  hotel: Record<HotelTier, PricingItemConfig>;
+  dinner: PricingItemConfig;
+  guide: PricingItemConfig;
+  flight: PricingItemConfig;
   coverageMaxPeople: number;
   extras: PricingExtra[];
 }
@@ -31,6 +31,10 @@ export interface QuoteInput {
   peopleCount: number;
   days: number;
   hotelTier: HotelTier;
+  dinnerIncluded: boolean;
+  guideIncluded: boolean;
+  guideDays: number;
+  internationalFlight: boolean;
   localAgencyCommissionPct: number;
   jinnCommissionPct: number;
   selectedExtras: SelectedExtra[];
@@ -49,7 +53,6 @@ export interface PricingExtra {
   price: number;
   pricingModel: PricingModel;
   multiplier: Multiplier;
-  priceSource?: "hotel"
 }
 
 export interface LineItem {

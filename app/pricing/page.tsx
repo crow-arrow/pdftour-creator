@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -33,15 +33,20 @@ import { NumberInput } from "@/components/ui/number-input";
 import { createT } from "@/lib/i18n";
 import type { TranslationKey } from "@/lib/i18n";
 import type { Locale } from "@/lib/types";
-import type { PricingConfig, HotelPricingConfig, SimplePricingConfig, PricingExtra } from "@/lib/types";
+import type { PricingConfig, PricingItemConfig, Tier } from "@/lib/types";
 import { useLocale } from "@/components/locale-provider";
 import { usePricingStore, type PricingTarget } from "@/store/pricingStore";
 import { useQuoteStore } from "@/store/quoteStore";
+import { cn } from "@/lib/utils";
+import { NumberStepper } from "@/components/NumberStepper";
 
 const sections: { key: PricingTarget; titleKey: string }[] = [
   { key: "hotel.budget", titleKey: "items.hotel_budget" },
   { key: "hotel.premium", titleKey: "items.hotel_premium" },
-  { key: "hotel.luxury", titleKey: "items.hotel_luxury" }
+  { key: "hotel.luxury", titleKey: "items.hotel_luxury" },
+  { key: "dinner", titleKey: "items.dinner" },
+  { key: "guide", titleKey: "items.guide" },
+  { key: "flight", titleKey: "items.flight" }
 ];
 
 function getConfig(target: PricingTarget, pricing: PricingConfig) {
@@ -49,163 +54,212 @@ function getConfig(target: PricingTarget, pricing: PricingConfig) {
     const key = target.split(".")[1] as keyof typeof pricing.hotel;
     return pricing.hotel[key];
   }
-  return pricing.extras.find((item) => item.id === target);
+  return pricing[target as "dinner" | "guide" | "flight"];
 }
 
-function HotelPricingSection({
+function validateTiers(
+  tiers: Tier[],
+  coverageMaxPeople: number,
+  t: (key: TranslationKey) => string
+): string[] {
+  const errors: string[] = [];
+  if (tiers.length === 0) {
+    errors.push(t("errors.addOneTier"));
+    return errors;
+  }
+  const sorted = [...tiers].sort((a, b) => a.minPeople - b.minPeople);
+  if (sorted[0].minPeople > 1) {
+    errors.push(t("errors.rangeStartFromOne"));
+  }
+  for (let i = 0; i < sorted.length; i += 1) {
+    const tier = sorted[i];
+    if (tier.maxPeople !== null && tier.maxPeople < tier.minPeople) {
+      errors.push(t("errors.tierMaxLessThanMin").replace("{min}", String(tier.minPeople)));
+    }
+    if (i > 0) {
+      const prev = sorted[i - 1];
+      const prevMax = prev.maxPeople ?? Number.POSITIVE_INFINITY;
+      if (prevMax >= tier.minPeople) {
+        errors.push(t("errors.overlapBetweenRanges"));
+        break;
+      }
+    }
+  }
+  const last = sorted[sorted.length - 1];
+  if (last.maxPeople !== null && last.maxPeople < coverageMaxPeople) {
+    errors.push(t("errors.rangeCoverUpTo").replace("{max}", String(coverageMaxPeople)));
+  }
+  return errors;
+}
+
+function PricingSection({
   title,
   config,
   target,
+  coverageMaxPeople,
   t
 }: {
   title: string;
-  config: HotelPricingConfig;
+  config: PricingItemConfig;
   target: PricingTarget;
+  coverageMaxPeople: number;
   t: (key: TranslationKey) => string;
 }) {
-  const { updateConfig } = usePricingStore();
-
-  return (
-    <Card className="space-y-4">
-      <CardHeader>
-        <CardTitle><h3 className="text-base font-semibold">{title}</h3></CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <FormItem>
-            <FormLabel>{t("labels.basePrice")} (€)</FormLabel>
-            <FormControl>
-              <NumberInput
-                min={0}
-                value={config.basePrice}
-                onChange={(v) => updateConfig(target, { basePrice: v })}
-              />
-            </FormControl>
-          </FormItem>
-          <FormItem>
-            <FormLabel>{t("labels.singleSupplementPrice")} (€)</FormLabel>
-            <FormControl>
-              <NumberInput
-                value={config.singleSupplementPrice}
-                onChange={(v) => updateConfig(target, { singleSupplementPrice: v })}
-                min={0}
-              />
-            </FormControl>
-          </FormItem>
-          <FormItem>
-            <FormLabel>{t("labels.pricingModel")}</FormLabel>
-            <FormControl>
-              <Select
-                value={config.pricingModel}
-                onValueChange={(value) =>
-                  updateConfig(target, { pricingModel: value as HotelPricingConfig["pricingModel"] })
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="per_person">{t("labels.perPerson")}</SelectItem>
-                  <SelectItem value="per_group">{t("labels.perGroup")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </FormControl>
-          </FormItem>
-          <FormItem>
-            <FormLabel>{t("labels.multiplier")}</FormLabel>
-            <FormControl>
-              <Select
-                value={config.multiplier}
-                onValueChange={(value) =>
-                  updateConfig(target, { multiplier: value as HotelPricingConfig["multiplier"] })
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="per_day">{t("labels.perDay")}</SelectItem>
-                  <SelectItem value="per_trip">{t("labels.perTrip")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </FormControl>
-          </FormItem>
-        </div>
-      </CardContent>
-    </Card>
+  const { updateConfig, updateTier, addTier, removeTier } = usePricingStore();
+  const errors = useMemo(
+    () => validateTiers(config.tiers, coverageMaxPeople, t),
+    [config.tiers, coverageMaxPeople, t]
   );
-}
-
-function SimplePricingSection({
-  title,
-  config,
-  target,
-  t
-}: {
-  title: string;
-  config: SimplePricingConfig;
-  target: PricingTarget;
-  t: (key: TranslationKey) => string;
-}) {
-  const { updateConfig } = usePricingStore();
 
   return (
     <Card className="space-y-4">
       <CardHeader>
         <CardTitle><h3 className="text-base font-semibold">{title}</h3></CardTitle>
+        <CardAction>
+          <Button size="lg" onClick={() => addTier(target)}>
+            {t("labels.addTier")}
+          </Button>
+        </CardAction>
       </CardHeader>
+
       <CardContent>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <FormItem>
-            <FormLabel>{t("labels.price")} (€)</FormLabel>
-            <FormControl>
-              <NumberInput
-                min={0}
-                value={config.price}
-                onChange={(v) => updateConfig(target, { price: v })}
-              />
-            </FormControl>
-          </FormItem>
-          <FormItem>
-            <FormLabel>{t("labels.pricingModel")}</FormLabel>
-            <FormControl>
-              <Select
-                value={config.pricingModel}
-                onValueChange={(value) =>
-                  updateConfig(target, { pricingModel: value as SimplePricingConfig["pricingModel"] })
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="per_person">{t("labels.perPerson")}</SelectItem>
-                  <SelectItem value="per_group">{t("labels.perGroup")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </FormControl>
-          </FormItem>
-          <FormItem>
-            <FormLabel>{t("labels.multiplier")}</FormLabel>
-            <FormControl>
-              <Select
-                value={config.multiplier}
-                onValueChange={(value) =>
-                  updateConfig(target, { multiplier: value as SimplePricingConfig["multiplier"] })
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="per_day">{t("labels.perDay")}</SelectItem>
-                  <SelectItem value="per_trip">{t("labels.perTrip")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </FormControl>
-          </FormItem>
-        </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <FormItem className="w-full">
+          <FormLabel>{t("labels.pricingModel")}</FormLabel>
+          <FormControl>
+            <Select
+              value={config.pricingModel}
+              onValueChange={(value) =>
+                updateConfig(target, { pricingModel: value as PricingItemConfig["pricingModel"] })
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="per_person">{t("labels.perPerson")}</SelectItem>
+                <SelectItem value="per_group">{t("labels.perGroup")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </FormControl>
+        </FormItem>
+        <FormItem className="w-full">
+          <FormLabel>{t("labels.multiplier")}</FormLabel>
+          <FormControl>
+            <Select
+              value={config.multiplier}
+              onValueChange={(value) =>
+                updateConfig(target, { multiplier: value as PricingItemConfig["multiplier"] })
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="per_day">{t("labels.perDay")}</SelectItem>
+                <SelectItem value="per_trip">{t("labels.perTrip")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </FormControl>
+        </FormItem>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full table-fixed text-sm">
+          <colgroup>
+            <col style={{ width: "32%" }} />
+            <col style={{ width: "32%" }} />
+            <col style={{ width: "32%" }} />
+            <col style={{ width: "4rem" }} />
+          </colgroup>
+          <thead>
+            <tr className="text-left text-muted-foreground">
+              <th className="pb-2">{t("labels.minPeople")}</th>
+              <th className="pb-2">{t("labels.maxPeople")}</th>
+              <th className="pb-2">{t("labels.price")} (€)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {config.tiers.map((tier, index) => (
+              <tr key={`${tier.minPeople}-${index}`}>
+                <td className="py-2 pr-3">
+                <NumberStepper
+                  value={tier.minPeople}
+                  onChange={(v) => updateTier(target, index, { minPeople: v ?? tier.minPeople })}
+                  min={1}
+                  max={999}
+                  size="lg"
+                  className="w-full"
+                />
+                </td>
+                <td className="flex-1 py-2 pr-3">
+                  <NumberStepper
+                    min={tier.minPeople}
+                    value={tier.maxPeople}
+                    onChange={(v) => updateTier(target, index, { maxPeople: v })}
+                    allowNull
+                    nullPlaceholder="+"
+                    max={999}
+                    size="lg"
+                    className="w-full"
+                  />
+                </td>
+                <td className="flex-1 py-2 pr-3">
+                  <NumberInput
+                    min={0}
+                    value={tier.price}
+                    onChange={(v) => updateTier(target, index, { price: v })}
+                    className="w-full"
+                  />
+                </td>
+                <td className="py-2 w-10 text-end">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="destructive"
+                      >
+                        <Trash2 />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>{t("dialog.deleteTierTitle")}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {t("dialog.deleteTierDescription")}
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>{t("dialog.cancel")}</AlertDialogCancel>
+                        <AlertDialogAction
+                          className={buttonVariants({ variant: "destructive" })}
+                          onClick={() => {
+                            removeTier(target, index);
+                            toast.success(t("toast.tierDeleted"));
+                          }}
+                        >
+                          {t("dialog.delete")}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       </CardContent>
+
+      <CardFooter>
+      {errors.length > 0 && (
+        <div className="w-full rounded-md border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+          {errors.map((error) => (
+            <div key={error}>{error}</div>
+          ))}
+        </div>
+      )}
+      </CardFooter>
     </Card>
   );
 }
@@ -240,7 +294,8 @@ export default function PricingPage() {
           <div className="rounded-md border border-border bg-muted px-4 py-3 text-sm text-muted-foreground">
             {t("pricing.activeQuote")
               .replace("{people}", String(quote.peopleCount))
-              .replace("{days}", String(quote.days))}
+              .replace("{days}", String(quote.days))
+              .replace("{max}", String(pricing.coverageMaxPeople))}
           </div>
           <Button
             size="lg"
@@ -254,25 +309,16 @@ export default function PricingPage() {
         </div>
 
         <div className="grid gap-6">
-          {sections.map((section) =>
-            section.key.startsWith("hotel.") ? (
-              <HotelPricingSection
-                key={section.key}
-                title={t(section.titleKey as TranslationKey)}
-                t={t}
-                config={getConfig(section.key, pricing) as HotelPricingConfig}
-                target={section.key}
-              />
-            ) : (
-              <SimplePricingSection
-                key={section.key}
-                title={t(section.titleKey as TranslationKey)}
-                t={t}
-                config={getConfig(section.key, pricing) as SimplePricingConfig}
-                target={section.key}
-              />
-            )
-          )}
+          {sections.map((section) => (
+            <PricingSection
+              key={section.key}
+              title={t(section.titleKey as any)}
+              t={t}
+              config={getConfig(section.key, pricing)}
+              target={section.key}
+              coverageMaxPeople={pricing.coverageMaxPeople}
+            />
+          ))}
         </div>
 
         <Card>
@@ -315,7 +361,7 @@ export default function PricingPage() {
                   value={extra.pricingModel}
                   onValueChange={(value) =>
                     updateExtra(extra.id, {
-                      pricingModel: value as PricingExtra["pricingModel"]
+                      pricingModel: value as PricingItemConfig["pricingModel"]
                     })
                   }
                 >
@@ -331,7 +377,7 @@ export default function PricingPage() {
                   value={extra.multiplier}
                   onValueChange={(value) =>
                     updateExtra(extra.id, {
-                      multiplier: value as PricingExtra["multiplier"]
+                      multiplier: value as PricingItemConfig["multiplier"]
                     })
                   }
                 >
