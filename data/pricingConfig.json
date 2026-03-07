@@ -4,56 +4,91 @@
     "budget": {
       "pricingModel": "per_person",
       "multiplier": "per_day",
-      "basePrice": 65,
-      "singleSupplementPrice": 20
+      "tiers": [
+        {
+          "minPeople": 1,
+          "maxPeople": 1,
+          "price": 49
+        },
+        {
+          "minPeople": 2,
+          "maxPeople": null,
+          "price": 65
+        }
+      ]
     },
     "premium": {
       "pricingModel": "per_person",
       "multiplier": "per_day",
-      "basePrice": 91,
-      "singleSupplementPrice": 65
+      "tiers": [
+        {
+          "minPeople": 1,
+          "maxPeople": 1,
+          "price": 155
+        },
+        {
+          "minPeople": 2,
+          "maxPeople": null,
+          "price": 91
+        }
+      ]
     },
     "luxury": {
       "pricingModel": "per_person",
       "multiplier": "per_day",
-      "basePrice": 210,
-      "singleSupplementPrice": 70
+      "tiers": [
+        {
+          "minPeople": 1,
+          "maxPeople": 1,
+          "price": 280
+        },
+        {
+          "minPeople": 2,
+          "maxPeople": 5,
+          "price": 240
+        },
+        {
+          "minPeople": 6,
+          "maxPeople": null,
+          "price": 210
+        }
+      ]
     }
   },
+  "dinner": {
+    "pricingModel": "per_person",
+    "multiplier": "per_day",
+    "tiers": [
+      {
+        "minPeople": 1,
+        "maxPeople": null,
+        "price": 25
+      }
+    ]
+  },
+  "guide": {
+    "pricingModel": "per_group",
+    "multiplier": "per_day",
+    "tiers": [
+      {
+        "minPeople": 1,
+        "maxPeople": null,
+        "price": 70
+      }
+    ]
+  },
+  "flight": {
+    "pricingModel": "per_person",
+    "multiplier": "per_trip",
+    "tiers": [
+      {
+        "minPeople": 1,
+        "maxPeople": null,
+        "price": 500
+      }
+    ]
+  },
   "extras": [
-    {
-      "id": "single_supplement",
-      "titleEn": "Single Supplement",
-      "titleDe": "Einzelzimmerzuschlag",
-      "price": 0,
-      "pricingModel": "per_person",
-      "multiplier": "per_piece",
-      "priceSource": "hotel"
-    },
-    {
-      "id": "dinner",
-      "titleEn": "Dinner",
-      "titleDe": "Abendessen",
-      "price": 25,
-      "pricingModel": "per_person",
-      "multiplier": "per_piece"
-    },
-    {
-      "id": "guide",
-      "titleEn": "Guide",
-      "titleDe": "Stadtführung",
-      "price": 70,
-      "pricingModel": "per_group",
-      "multiplier": "per_day"
-    },
-    {
-      "id": "flight",
-      "titleEn": "Flight",
-      "titleDe": "Flug",
-      "price": 1100,
-      "pricingModel": "per_person",
-      "multiplier": "per_piece"
-    },
     {
       "id": "transfer",
       "titleEn": "Transfers",
@@ -85,6 +120,14 @@
       "price": 200,
       "pricingModel": "per_group",
       "multiplier": "per_trip"
+    },
+    {
+      "id": "guide-extra",
+      "titleEn": "Guide",
+      "titleDe": "Guide",
+      "price": 70,
+      "pricingModel": "per_group",
+      "multiplier": "per_day"
     },
     {
       "id": "transport",
