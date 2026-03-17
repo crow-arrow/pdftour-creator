@@ -7,6 +7,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+    shm_size: "1gb"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/pdf', (r) => {process.exit(r.statusCode === 405 ? 0 : 1)})"]
