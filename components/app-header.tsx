@@ -25,6 +25,7 @@ export default function AppHeader({ initialTheme }: AppHeaderProps) {
   const pathname = usePathname();
   const navItems = [
     { href: "/quote", label: t("nav.quote") },
+    { href: "/pdf-builder", label: "PDF Builder" },
     { href: "/saved", label: t("nav.savedPdfs") },
     { href: "/pricing", label: t("nav.pricing") }
   ];

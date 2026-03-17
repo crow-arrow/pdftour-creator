@@ -27,7 +27,7 @@ export default async function RootLayout({
       <head>
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Montserrat:wght@400;500;600;700&family=Cormorant+Garamond:wght@400;500;600;700&family=Lora:wght@400;500;600;700&family=Merriweather:wght@400;700&family=Source+Sans+3:wght@400;500;600;700&family=Open+Sans:wght@400;500;600;700&family=Aboreto&family=Cinzel:wght@400;600;700&family=Raleway:wght@400;500;600;700&family=Bebas+Neue&family=Lato:wght@400;600;700&family=Nunito:wght@400;600;700&display=swap"
         />
       </head>
       <body>

@@ -90,7 +90,7 @@
       "id": "transport",
       "titleEn": "Transport",
       "titleDe": "Transport",
-      "price": 90,
+      "price": 100,
       "pricingModel": "per_group",
       "multiplier": "per_day"
     }
