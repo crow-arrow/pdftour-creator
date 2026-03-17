@@ -242,9 +242,9 @@ export function renderQuoteHtml({ quote, locale, calculated }: RenderParams) {
             <div>${escapeHtml(t("labels.peopleCount"))}: ${quote.peopleCount}</div>
             <div>${escapeHtml(t("labels.days"))}: ${quote.days}</div>
             <div>${escapeHtml(t("labels.hotelTier"))}: ${escapeHtml(hotelLabel)}</div>
-            <div>${escapeHtml(t("labels.dinnerIncluded"))}: ${quote.dinnerIncluded ? escapeHtml(yes) : escapeHtml(no)}</div>
-            <div>${escapeHtml(t("labels.guideIncluded"))}: ${quote.guideIncluded ? escapeHtml(yes) : escapeHtml(no)}</div>
-            <div>${escapeHtml(t("labels.flightIncluded"))}: ${quote.internationalFlight ? escapeHtml(yes) : escapeHtml(no)}</div>
+            <div>${escapeHtml(t("labels.dinnerIncluded"))}: ${quote.selectedExtras.some((e) => e.id === "dinner") ? escapeHtml(yes) : escapeHtml(no)}</div>
+            <div>${escapeHtml(t("labels.guideIncluded"))}: ${quote.selectedExtras.some((e) => e.id === "guide") ? escapeHtml(yes) : escapeHtml(no)}</div>
+            <div>${escapeHtml(t("labels.flightIncluded"))}: ${quote.selectedExtras.some((e) => e.id === "flight") ? escapeHtml(yes) : escapeHtml(no)}</div>
           </div>
         </div>
 
