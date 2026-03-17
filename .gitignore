@@ -72,6 +72,7 @@ docker-compose.override.yml
 # data/
 # uploads/
 data/pdf/
+data/pdf-builder/
 
 # TEMP
 DEPLOY.md

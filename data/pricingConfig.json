@@ -13,7 +13,7 @@
         {
           "minPeople": 2,
           "maxPeople": null,
-          "price": 65
+          "price": 45
         }
       ]
     },
@@ -73,7 +73,7 @@
       {
         "minPeople": 1,
         "maxPeople": null,
-        "price": 70
+        "price": 0
       }
     ]
   },
@@ -133,7 +133,7 @@
       "id": "transport",
       "titleEn": "Transport",
       "titleDe": "Transport",
-      "price": 90,
+      "price": 100,
       "pricingModel": "per_group",
       "multiplier": "per_day"
     }
