@@ -1,7 +1,7 @@
 import type { TourBuilderState } from "./types";
 import { MAX_DAY_DESCRIPTION_CHARS } from "./types";
-import type { Locale } from "@/lib/types";
-import { dictionaries } from "@/lib/i18n";
+import type { Locale } from "../types";
+import { dictionaries } from "../i18n";
 
 function escapeHtml(value: string) {
   return value
@@ -38,6 +38,17 @@ export function renderTourHtml(state: TourBuilderState, locale: Locale = "en"): 
   const coverFont = (cover.titleFont ?? fonts.heading).replace(/ /g, "+");
   const fontUrl = `https://fonts.googleapis.com/css2?family=${fontHeading}:wght@400;500;600;700&family=${fontBody}:wght@400;500;600;700&family=${coverFont}:wght@400;600;700&display=swap`;
   const showTourManager = tourManager.enabled !== false;
+  const preloadImageUrls = Array.from(
+    new Set(
+      [
+        cover.backgroundImageUrl,
+        cover.logoUrl,
+        showTourManager ? tourManager.avatarUrl : "",
+        ...itinerary.map((d) => d.imageUrl),
+        ...(optionalExtension?.days.map((d) => d.imageUrl) ?? [])
+      ].filter((value): value is string => Boolean(value?.trim()))
+    )
+  );
 
   const renderItineraryDay = (day: (typeof itinerary)[0]) => `
     <div class="itinerary-day">
@@ -172,6 +183,11 @@ export function renderTourHtml(state: TourBuilderState, locale: Locale = "en"): 
     </style>
   </head>
   <body>
+    <div style="position: fixed; width: 0; height: 0; overflow: hidden; opacity: 0; pointer-events: none;">
+      ${preloadImageUrls
+        .map((url) => `<img src="${escapeHtml(url)}" alt="" />`)
+        .join("")}
+    </div>
     <div class="cover" style="background-image: url(${escapeHtml(cover.backgroundImageUrl)})">
       ${cover.logoUrl ? `<img class="cover-logo" src="${escapeHtml(cover.logoUrl)}" alt="Logo" />` : ""}
       <h1 style="font-family: '${cover.titleFont ?? fonts.heading}', serif; font-size: 48px; font-weight: ${cover.titleWeight ?? "700"}; color: ${cover.titleColor ?? "#fff"}; text-transform: ${cover.titleStyle ?? "uppercase"}; letter-spacing: ${cover.titleLetterSpacing === "wide" ? "0.12em" : cover.titleLetterSpacing === "extra-wide" ? "0.2em" : "normal"}; margin: 0 0 8px 0;">

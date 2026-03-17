@@ -1,8 +1,8 @@
-import { chromium } from "playwright";
 import { calculateQuote } from "@/lib/calc";
 import { renderQuoteHtml } from "@/lib/pdf/template";
 import type { Locale, PricingConfig, QuoteInput } from "@/lib/types";
 import { createT } from "@/lib/i18n";
+import { getPdfBrowser, preparePdfPage } from "@/lib/pdf/browser";
 
 export async function generatePdfBuffer(
   quote: QuoteInput,
@@ -17,19 +17,10 @@ export async function generatePdfBuffer(
     calculated
   });
 
-  const executablePath =
-    process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined;
-  const browser = await chromium.launch({
-    headless: true,
-    executablePath,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage"
-    ]
-  });
-  const page = await browser.newPage();
-  await page.setContent(html, { waitUntil: "networkidle" });
+  const browser = await getPdfBrowser();
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await preparePdfPage(page, html, { waitTimeoutMs: 15000 });
 
   const t = createT(locale);
   const contactLabel = "Contact";
@@ -51,12 +42,13 @@ export async function generatePdfBuffer(
   const companyName = t("pdf.company");
   const companyTagline = t("pdf.companyTagline");
 
-  const pdf = await page.pdf({
-    format: "A4",
-    printBackground: true,
-    margin: { top: "120px", bottom: "250px", left: "0px", right: "0px" },
-    displayHeaderFooter: true,
-    headerTemplate: `
+  try {
+    const pdf = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      margin: { top: "120px", bottom: "250px", left: "0px", right: "0px" },
+      displayHeaderFooter: true,
+      headerTemplate: `
       <div style="width:100%; padding:0 56px 10px;">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:24px; border-bottom:2px solid #CBAF87; padding-bottom:20px;">
           <div>
@@ -66,7 +58,7 @@ export async function generatePdfBuffer(
         </div>
       </div>
     `,
-    footerTemplate: `
+      footerTemplate: `
       <div style="width:100%; font-size:8px; line-height:1.25; color:#64748b; padding:0 56px 8px; display:flex; justify-content:space-between; gap:16px;">
         <div style="display:flex; gap:16px; flex-wrap:wrap;">
           <div style="min-width:140px; max-width:220px;">
@@ -95,8 +87,10 @@ export async function generatePdfBuffer(
         <div style="align-self:flex-end; white-space:nowrap; font-size:8px;">Page <span class="pageNumber"></span> / <span class="totalPages"></span></div>
       </div>
     `
-  });
+    });
 
-  await browser.close();
-  return Buffer.from(pdf);
+    return Buffer.from(pdf);
+  } finally {
+    await context.close();
+  }
 }
