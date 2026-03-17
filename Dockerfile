@@ -14,7 +14,7 @@ RUN mkdir -p /app/public
 RUN npm run build
 
 # Stage 3: Runner (official Playwright image with browser/runtime deps)
-FROM mcr.microsoft.com/playwright:v1.49.1-jammy AS runner
+FROM mcr.microsoft.com/playwright:v1.58.2-jammy AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
